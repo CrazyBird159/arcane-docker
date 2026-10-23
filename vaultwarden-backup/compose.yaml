@@ -1,0 +1,31 @@
+networks:
+  vaultwarden-backup:
+    name: vaultwarden-backup
+    driver: bridge
+
+services:
+  vaultwarden-backup:
+    image: bruceforce/vaultwarden-backup:latest
+    container_name: vaultwarden-backup
+    restart: unless-stopped
+    init: true
+    environment:
+      - BACKUP_DIR=/backups/
+      - LOG_DIR=/logs/
+      - CRON_TIME=0 5 * * *
+      - DELETE_AFTER=30
+      - TIMESTAMP=true
+      - BACKUP_ON_STARTUP=true
+      - BACKUP_ADD_DATABASE=true
+      - BACKUP_ADD_ATTACHMENTS=true
+      - BACKUP_ADD_CONFIG_JSON=true
+      - BACKUP_ADD_ICON_CACHE=true
+      - BACKUP_ADD_RSA_KEY=true
+      - LOG_LEVEL=INFO
+      - TZ=Europe/Berlin
+    volumes:
+      - /docker/vaultwarden/vw-data:/data/
+      - /docker/vaultwarden/backups:/backups/
+      - /docker/vaultwarden/logs:/logs/
+    networks:
+      - vaultwarden-backup
