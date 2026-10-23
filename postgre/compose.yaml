@@ -1,0 +1,35 @@
+networks:
+  shared-postgres:
+    name: shared-postgres
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.33.0.0/24"
+
+services:
+  postgres-central:
+    image: postgres:18-alpine
+    container_name: postgres-central
+    restart: unless-stopped
+    networks:
+      - shared-postgres
+    volumes:
+      - /docker/postgres-central/data:/var/lib/postgresql
+      - /docker/postgres-central/init:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_CENTRAL_PASSWORD}
+      # Paperless
+      PAPERLESS_DB_USER: ${PAPERLESS_DB_USER}
+      PAPERLESS_DB_NAME: ${PAPERLESS_DB_NAME}
+      PAPERLESS_DB_PASSWORD: ${PAPERLESS_DB_PASSWORD}
+      # Terminus
+      TERMINUS_DB_USER: ${TERMINUS_DB_USER}
+      TERMINUS_DB_NAME: ${TERMINUS_DB_NAME}
+      TERMINUS_DB_PASSWORD: ${TERMINUS_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
