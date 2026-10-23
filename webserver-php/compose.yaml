@@ -1,0 +1,19 @@
+networks:
+  webserver-php:
+    name: webserver-php
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.23.0.0/24"
+
+services:
+  webserver:
+    image: erseco/alpine-php-webserver:latest
+    container_name: webserver-php
+    restart: unless-stopped
+    ports:
+      - 8181:8080
+    volumes:
+      - /docker/alpine-php-webserver/php:/var/www/html
+    networks:
+      - webserver-php
