@@ -1,0 +1,28 @@
+networks:
+  uptimekuma:
+    name: uptimekuma
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.25.0.0/24"
+
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    restart: always
+    ports:
+      - "3001:3001"  # This maps the container port "3001" to the host port "3001"
+    volumes:
+      - /docker/uptimekuma/data:/app/data  # Configuring persistent storage
+      - /var/run/docker.sock:/var/run/docker.sock # Allow access to docker container for monitoring
+    environment:
+      - TZ=Europe/Berlin  # Set the timezone (change to your preferred local timezone so monitoring times are the same)
+      - UMASK=0022  # Set your file permissions manually
+    networks:
+      - uptimekuma  # add your own custom network config
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
