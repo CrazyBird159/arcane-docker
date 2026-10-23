@@ -1,0 +1,37 @@
+networks:
+  nginxpm:
+    name: nginxpm
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+services:
+  nginxpm:
+    container_name: nginxpm
+    hostname: nginxpm
+    image: jc21/nginx-proxy-manager:latest
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 81:81
+      - 443:443
+    environment:
+      PUID: 1000
+      PGID: 1000
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    volumes:
+      - /docker/nginxpm/data:/data
+      - /docker/nginxpm/logs/:/config/log/
+      - /docker/nginxpm/letsencrypt:/etc/letsencrypt
+    healthcheck:
+      test:
+        - CMD
+        - /usr/bin/check-health
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    networks:
+      - nginxpm
