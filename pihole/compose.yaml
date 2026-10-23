@@ -1,0 +1,64 @@
+networks:
+  pihole:
+    name: pihole
+    driver: bridge
+    ipam:
+      config:
+        # Fixed class B CIDR
+        - subnet: "172.19.0.0/24"
+
+# More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
+services:
+  dnscrypt-proxy:
+    container_name: dnscrypt-proxy
+    image: klutchell/dnscrypt-proxy
+    ports:
+      - '5053:5053/tcp'
+      - '5053:5053/udp'
+      - '8282:8080'
+    volumes:
+      - /docker/dnscrypt-proxy/config/:/config/:rw
+    restart: unless-stopped
+    networks:
+      pihole:
+        ipv4_address: 172.19.0.2
+
+
+
+  pihole:
+    container_name: pihole
+    hostname: pihole
+    image: pihole/pihole:latest
+    shm_size: 256mb
+    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+    ports:
+      - "192.168.99.215:53:53/tcp"
+      - "192.168.99.215:53:53/udp"
+      # Web Admin Port
+      - "88:80/tcp"
+      # Default HTTPs Port. FTL will generate a self-signed certificate
+      - "444:443/tcp"
+    # See the list of environment variables at https://github.com/pi-hole/docker-pi-hole/#environment-variables
+    environment:
+      TZ: "Europe/Berlin"
+      FTLCONF_LOCAL_IPV4: 192.168.99.215
+      FTLCONF_webserver_api_password: "${PIHOLE_WEBPASSWORD}"
+      FTLCONF_dns_listeningMode: "all"
+      WEBTHEME: "default-darker"
+
+      # Use Cloudflared as the DNS
+      PIHOLE_DNS_: "dockerhost#5055"
+    
+    # Volumes store your data between container upgrades
+    volumes:
+      - "/docker/pihole/etc-pihole:/etc/pihole"
+      - "/docker/pihole/etc-dnsmasq.d:/etc/dnsmasq.d"
+      #- "/docker/pihole/etc-resolv.conf:/etc/resolv.conf"
+
+    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+    # cap_add:
+    # - NET_ADMIN # Required if you are using Pi-hole as your DHCP server, else not needed
+    restart: unless-stopped
+    networks:
+      pihole:
+        ipv4_address: "172.19.0.3"
