@@ -1,0 +1,23 @@
+networks:
+  glances:
+    name: glances
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.27.0.0/24"
+
+services:
+  monitoring:
+    image: nicolargo/glances:latest
+    container_name: glances-monitoring
+    restart: unless-stopped
+    pid: host
+    ports:
+      - 61208-61209:61208-61209
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/os-release:/etc/os-release:ro
+    environment:
+      - "GLANCES_OPT=-w"
+    networks:
+      - glances
