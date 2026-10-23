@@ -1,0 +1,29 @@
+services:
+  arcane:
+    image: ghcr.io/getarcaneapp/manager:latest
+    container_name: arcane
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cgroup: host
+    ports:
+      - 3552:3552
+    volumes:
+      - /docker/arcane-data:/app/data
+      - /docker:/docker
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - APP_URL=http://arcane.local
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+      - LOG_LEVEL=info
+      - LOG_JSON=false
+      - ENCRYPTION_KEY=${ARCANE_ENCRYPTION_KEY:?Set ARCANE_ENCRYPTION_KEY in .env}
+      - PROJECTS_DIRECTORY=/docker
+    healthcheck:
+      test: ["CMD", "./arcane", "health", "--timeout", "2s"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
