@@ -1,0 +1,25 @@
+networks:
+  bunkerweb:
+    name: bunkerweb
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.18.0.0/24"
+
+services:
+  bunkerweb-aio:
+    image: bunkerity/bunkerweb-all-in-one:latest
+    container_name: bunkerweb-aio
+    restart: unless-stopped
+    ports:
+      - "8081:8080/tcp"
+      - "8444:8443/tcp"
+      - "8444:8443/udp"
+    environment:
+      - TZ=Europe/Berlin
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /docker/Bunkerweb/data:/data
+    networks:
+      - bunkerweb
