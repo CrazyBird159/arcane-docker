@@ -1,0 +1,52 @@
+# Smallstep step-ca – private Zertifizierungsstelle mit ACME-Unterstützung.
+#
+# Arcane:
+# 1. Neues Projekt erstellen und den Inhalt dieser Datei einfügen.
+# 2. Vor dem Erstellen in der Projektumgebung (.env) setzen, z. B.:
+#    STEP_CA_NAME=Kastellan Private CA
+#    STEP_CA_DNS_NAMES=ca.kastellan.local,192.168.99.215
+#    Die Liste muss die Namen/IPs enthalten, über die Clients die CA erreichen.
+# 3. Projekt deployen und den beim ersten Start ausgegebenen Root-Fingerprint
+#    sowie die Zugangsdaten für die Remote-Verwaltung sicher speichern.
+#
+# Die Initialisierungsvariablen werden nur beim ersten Start ausgewertet.
+# Für eine Änderung von CA-Name oder DNS-Namen nach der Initialisierung ist
+# eine manuelle Anpassung der bestehenden CA-Konfiguration erforderlich.
+
+networks:
+  stepca:
+    name: stepca
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.35.0.0/24"
+
+services:
+  step-ca:
+    image: smallstep/step-ca:latest
+    container_name: step-ca
+    hostname: step-ca
+    restart: unless-stopped
+    ports:
+      - "9001:9000"
+    environment:
+      # Der CA-Name erscheint als Aussteller in ausgestellten Zertifikaten.
+      DOCKER_STEPCA_INIT_NAME: "${STEP_CA_NAME:-Kastellan Private CA}"
+      # In der Projektumgebung verpflichtend setzen; Beispiel: ca.kastellan.local,192.168.99.215
+      DOCKER_STEPCA_INIT_DNS_NAMES: "${STEP_CA_DNS_NAMES:?STEP_CA_DNS_NAMES muss in der Projektumgebung (.env) gesetzt werden}"
+      # Legt einen ACME-Provisioner für certbot, Caddy, Traefik usw. an.
+      DOCKER_STEPCA_INIT_ACME: "true"
+      # Ermöglicht die Verwaltung zusätzlicher Provisioner über die API.
+      DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT: "true"
+      DOCKER_STEPCA_INIT_PROVISIONER_NAME: "${STEP_CA_PROVISIONER_NAME:-admin}"
+    volumes:
+      # Enthält Zertifikate, verschlüsselte CA-Schlüssel, Datenbank und Konfiguration.
+      - /docker/step-ca:/home/step
+    networks:
+      - stepca
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-check-certificate --quiet --output-document=- https://localhost:9000/health | grep -q '\"status\":\"ok\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
