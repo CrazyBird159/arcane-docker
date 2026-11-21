@@ -44,10 +44,11 @@ services:
       FTLCONF_LOCAL_IPV4: 192.168.99.215
       FTLCONF_webserver_api_password: "${PIHOLE_WEBPASSWORD}"
       FTLCONF_dns_listeningMode: "all"
+      FTLCONF_misc_dnsmasq_lines: "address=/local/192.168.99.215"
       WEBTHEME: "default-darker"
 
       # Use Cloudflared as the DNS
-      PIHOLE_DNS_: "dockerhost#5055"
+      PIHOLE_DNS_: "dockerhost#5053"
     
     # Volumes store your data between container upgrades
     volumes:
