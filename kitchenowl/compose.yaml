@@ -4,7 +4,11 @@ networks:
     driver: bridge
     ipam:
       config:
+        # Bewusst gewaehlter oeffentlicher Bereich, kein privates RFC-1918-Netz.
         - subnet: "172.35.0.0/24"
+  shared-postgres:
+    name: shared-postgres
+    external: true
 
 services:
   kitchenowl:
@@ -15,9 +19,27 @@ services:
       - "8030:8080"
     environment:
       JWT_SECRET_KEY: "${KITCHENOWL_JWT_SECRET_KEY:?KITCHENOWL_JWT_SECRET_KEY muss in der Projektumgebung (.env) gesetzt werden}"
-      KITCHENOWL_MCP_ENABLED: true
       TZ: Europe/Berlin
+      DB_DRIVER: postgresql
+      DB_HOST: postgres-central
+      DB_PORT: 5432
+      DB_NAME: "${KITCHENOWL_DB_NAME:-kitchenowl}"
+      DB_USER: "${KITCHENOWL_DB_USER:-kitchenowl}"
+      DB_PASSWORD: "${KITCHENOWL_DB_PASSWORD:?KITCHENOWL_DB_PASSWORD muss in der Projektumgebung (.env) gesetzt werden}"
+      # Oeffentliche URL inkl. Schema ohne abschliessenden Slash; Basis fuer Links in E-Mails.
+      FRONT_URL: "${KITCHENOWL_FRONT_URL:-}"
+      # SMTP (Hetzner): mail.your-server.de, Port 587 mit STARTTLS.
+      # Ohne SMTP_FROM bleibt der E-Mail-Versand deaktiviert.
+      SMTP_HOST: "${KITCHENOWL_SMTP_HOST:-mail.your-server.de}"
+      SMTP_PORT: "${KITCHENOWL_SMTP_PORT:-587}"
+      SMTP_USE_TLS: "${KITCHENOWL_SMTP_USE_TLS:-true}"
+      SMTP_USER: "${KITCHENOWL_SMTP_USER:-}"
+      SMTP_PASS: "${KITCHENOWL_SMTP_PASS:-}"
+      SMTP_FROM: "${KITCHENOWL_SMTP_FROM:-}"
+      SMTP_REPLY_TO: "${KITCHENOWL_SMTP_REPLY_TO:-}"
     volumes:
+      # Bilder/Uploads; die Datenbank liegt in postgres-central.
       - /docker/kitchenowl/data:/data
     networks:
       - kitchenowl
+      - shared-postgres
