@@ -27,6 +27,10 @@ services:
       TERMINUS_DB_USER: ${TERMINUS_DB_USER}
       TERMINUS_DB_NAME: ${TERMINUS_DB_NAME}
       TERMINUS_DB_PASSWORD: ${TERMINUS_DB_PASSWORD}
+      # KitchenOwl
+      KITCHENOWL_DB_USER: ${KITCHENOWL_DB_USER:-kitchenowl}
+      KITCHENOWL_DB_NAME: ${KITCHENOWL_DB_NAME:-kitchenowl}
+      KITCHENOWL_DB_PASSWORD: ${KITCHENOWL_DB_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
